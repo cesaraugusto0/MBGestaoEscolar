@@ -1,14 +1,14 @@
 ﻿using MBGestaoEscolar.Entities;
-using MBGestaoEscolar.Repository.Implementation;
+using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
 namespace MBGestaoEscolar.Services.Implementations
 {
     public class AlunoService : IAlunoService
     {
-        private readonly AlunoRepository _alunoRepository;
+        private readonly IAlunoRepository _alunoRepository;
 
-        public AlunoService(AlunoRepository alunoRepository)
+        public AlunoService(IAlunoRepository alunoRepository)
         {
             _alunoRepository = alunoRepository;
         }
