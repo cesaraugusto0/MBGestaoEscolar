@@ -11,7 +11,7 @@
             <MudSpacer />
             <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                       StartIcon="@Icons.Material.Filled.Add" 
-                      OnClick="() => Console.WriteLine()">
+                      OnClick="CadastrarAluno">
                 Cadastrar Aluno
             </MudButton>
         </MudCardHeader>
@@ -35,7 +35,7 @@
                         <MudTh>Matrícula</MudTh>
                         <MudTh>Nome</MudTh>
                         <MudTh>Email</MudTh>
-                        <MudTh>Data Nascimento</MudTh>
+                        <MudTh>Data Cadastro</MudTh>
                         <MudTh>Status</MudTh>
                         <MudTh>Ações</MudTh>
                     </HeaderContent>
@@ -113,6 +113,11 @@
             "Trancado" => Color.Warning,
             _ => Color.Default
         };
+    }
+
+    private void CadastrarAluno()
+    {
+        Navigation.NavigateTo("/alunos/cadastro");
     }
 
     private void VisualizarAluno(int id)

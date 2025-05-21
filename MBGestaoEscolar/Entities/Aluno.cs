@@ -17,7 +17,7 @@ namespace MBGestaoEscolar.Entities
         public string? Telefone { get; set; }
         public DateTime? DataNascimento { get; set; }
         public string? Endereco { get; set; }
-        public string StatusAluno { get; set; } = "Ativo";
+        public string StatusAluno { get; set; }
         public DateTime DataCadastro { get; set; }
 
     }

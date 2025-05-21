@@ -19,6 +19,10 @@ namespace MBGestaoEscolar.Services.Implementations
             {
                 throw new ArgumentNullException("O nome é obrigatório!");
             }
+
+            aluno.Matricula = GerarMatricula();
+            aluno.DataCadastro = DateTime.Now;
+            aluno.StatusAluno = "Ativo";
             await _alunoRepository.AdicionarAsync(aluno);
         }
 
@@ -46,6 +50,16 @@ namespace MBGestaoEscolar.Services.Implementations
                 throw new KeyNotFoundException($"O aluno com id {id} não foi localizado");
             }
             return aluno;
-        }   
+        }
+        
+        private string GerarMatricula()
+        {
+            string matricula = new Random().Next(1, 10).ToString();
+            for (int i = 1; i < 8; i++)
+            {
+                matricula += new Random().Next(0, 10).ToString();
+            }
+            return matricula;
+        }
     }
 }
