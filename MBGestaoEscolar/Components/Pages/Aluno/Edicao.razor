@@ -1,0 +1,138 @@
+@page "/alunos/editar/{AlunoId:int}"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-16">
+    <MudPaper Class="pa-8" Elevation="5">
+        <MudText Typo="Typo.h4" Class="mb-6">Edição de Aluno</MudText>
+        
+        <MudForm @ref="_form" Model="@_aluno" @onsubmit="HandleSubmit">
+            <!-- Campo Matrícula (somente leitura) -->
+            <MudTextField @bind-Value="_aluno.Matricula" 
+                          Label="Matrícula" 
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          ReadOnly="true" />
+            
+            <MudTextField @bind-Value="_aluno.Nome" 
+                          Label="Nome Completo" 
+                          Required="true" 
+                          RequiredError="Nome é obrigatório"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_aluno.CPF" 
+                          Label="CPF" 
+                          Required="true" 
+                          RequiredError="CPF é obrigatório"
+                          Variant="Variant.Outlined"
+                          Mask="@(new PatternMask("000.000.000-00"))"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_aluno.Email" 
+                          Label="Email" 
+                          Required="true" 
+                          RequiredError="Email é obrigatório"
+                          InputType="InputType.Email"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_aluno.Telefone" 
+                          Label="Telefone"
+                          Variant="Variant.Outlined"
+                          Mask="@(new PatternMask("(00) 00000-0000"))"
+                          Class="mb-4" />
+            
+            <MudDatePicker @bind-Date="_aluno.DataNascimento"
+                           Label="Data de Nascimento"
+                           Variant="Variant.Outlined"
+                           Class="mb-4" />
+            
+            <MudTextField @bind-Value="_aluno.Endereco" 
+                          Label="Endereço" 
+                          Lines=3
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <!-- Campo Status do Aluno -->
+            <MudSelect @bind-Value="_aluno.StatusAluno"
+                       Label="Status do Aluno"
+                       Variant="Variant.Outlined"
+                       Class="mb-4">
+                @foreach (var status in statusAluno)
+                {
+                    <MudSelectItem Value="status">@status</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <div class="d-flex justify-end mt-6">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           Class="mr-2"
+                           Href="/alunos">
+                    Cancelar
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           ButtonType="ButtonType.Submit">
+                    Salvar Alterações
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private Aluno _aluno = new Aluno();
+    private readonly string[] statusAluno = {"Ativo","Inativo","Trancado","Formado"};
+    
+    [Parameter] public int AlunoId { get; set; }
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public IAlunoService _alunoService { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAluno();
+    }
+    
+    private async Task CarregarAluno()
+    {
+        try
+        {
+            _aluno = await _alunoService.ObterAlunoAsync(AlunoId);
+            
+            if (_aluno == null)
+            {
+                Snackbar.Add("Aluno não encontrado!", Severity.Error);
+                NavigationManager.NavigateTo("/alunos");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar aluno: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/alunos");
+        }
+    }
+    
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (_form.IsValid)
+        {
+            try
+            {
+                await _alunoService.AtualizarAsync(_aluno);
+                Snackbar.Add("Aluno atualizado com sucesso!", Severity.Success);
+                NavigationManager.NavigateTo($"/alunos/detalhes/{_aluno.AlunoId}");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Erro ao atualizar aluno: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

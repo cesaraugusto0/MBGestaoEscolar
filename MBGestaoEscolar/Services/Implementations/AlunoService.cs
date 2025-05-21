@@ -28,7 +28,6 @@ namespace MBGestaoEscolar.Services.Implementations
 
         public async Task AtualizarAsync(Aluno aluno)
         {
-            // TODO verificar se usuario existe
             await _alunoRepository.AtualizarAsync(aluno);
         }
 
