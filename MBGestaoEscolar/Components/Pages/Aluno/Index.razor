@@ -1,0 +1,145 @@
+﻿@page "/alunos"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+@inject NavigationManager Navigation
+@inject IAlunoService AlunoService
+
+<MudContainer>
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Listagem de Alunos</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                      StartIcon="@Icons.Material.Filled.Add" 
+                      OnClick="() => Console.WriteLine()">
+                Cadastrar Aluno
+            </MudButton>
+        </MudCardHeader>
+        
+        <MudCardContent>
+            @if (alunos == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@alunos" Hover="true" Breakpoint="Breakpoint.None">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="searchString" 
+                                     Placeholder="Pesquisar..." 
+                                     Adornment="Adornment.Start" 
+                                     AdornmentIcon="@Icons.Material.Filled.Search" 
+                                     IconSize="Size.Medium" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Matrícula</MudTh>
+                        <MudTh>Nome</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Data Nascimento</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Ações</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Matrícula">@context.Matricula</MudTd>
+                        <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="Data Cadastro">@context.DataCadastro.ToShortDateString()</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Color="@GetStatusColor(context.StatusAluno)" 
+                                    Variant="Variant.Filled" 
+                                    Size="Size.Small" 
+                                    T="string">@context.StatusAluno</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Ações">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                          Color="Color.Info" 
+                                          OnClick="@(() => VisualizarAluno(context.AlunoId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                          Color="Color.Warning" 
+                                          OnClick="@(() => EditarAluno(context.AlunoId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                          Color="Color.Error" 
+                                          OnClick="@(() => ExcluirAluno(context.AlunoId))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<MudDialog @bind-IsVisible="deleteDialogVisible" Title="Confirmar exclusão">
+    <DialogContent>
+        Deseja realmente excluir este aluno?
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="ConfirmDelete">Excluir</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private IEnumerable<Aluno> alunos;
+    private int alunoIdToDelete;
+    private bool deleteDialogVisible = false;
+    private string searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAlunos();
+    }
+
+    private async Task CarregarAlunos()
+    {
+        try
+        {
+            alunos = await AlunoService.ListaAlunosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar alunos: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Ativo" => Color.Success,
+            "Inativo" => Color.Error,
+            "Trancado" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    private void VisualizarAluno(int id)
+    {
+        Navigation.NavigateTo($"/alunos/visualizar/{id}");
+    }
+
+    private void EditarAluno(int id)
+    {
+        Navigation.NavigateTo($"/alunos/editar/{id}");
+    }
+
+    private void ExcluirAluno(int id)
+    {
+        alunoIdToDelete = id;
+        deleteDialogVisible = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        // await AlunoService.DeleteAlunoAsync(alunoIdToDelete);
+        deleteDialogVisible = false;
+        await CarregarAlunos();
+    }
+
+    private void CloseDeleteDialog()
+    {
+        deleteDialogVisible = false;
+    }
+}
