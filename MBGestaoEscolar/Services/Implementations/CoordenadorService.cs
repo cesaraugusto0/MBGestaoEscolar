@@ -23,9 +23,9 @@ namespace MBGestaoEscolar.Services.Implementations
             await _coordenadorRepository.AtualizarAsync(coordenador);
         }
 
-        public Task ExcluirAsync(int id)
+        public async Task ExcluirAsync(int id)
         {
-            throw new NotImplementedException();
+            await _coordenadorRepository.ExcluirAsync(id);
         }
 
         public async Task<IEnumerable<Coordenador>> ListaCoordenadorsAsync()
