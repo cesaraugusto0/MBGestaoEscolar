@@ -59,7 +59,7 @@
                                           OnClick="@(() => EditarAluno(context.AlunoId))" />
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" 
                                           Color="Color.Error" 
-                                          OnClick="@(() => ExcluirAluno(context.AlunoId))" />
+                                          OnClick="@(() => ExcluirAluno(context))" />
                         </MudTd>
                     </RowTemplate>
                     <PagerContent>
@@ -71,21 +71,26 @@
     </MudCard>
 </MudContainer>
 
-<MudDialog @bind-IsVisible="deleteDialogVisible" Title="Confirmar exclusão">
+<!-- Dialog de Confirmação para Exclusão -->
+<MudDialog @ref="_deleteDialog" Title="Confirmar Exclusão">
     <DialogContent>
-        Deseja realmente excluir este aluno?
+        <MudText>Deseja realmente excluir o aluno @alunoToDelete.Nome?</MudText>
     </DialogContent>
     <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CloseDeleteDialog">Cancelar</MudButton>
-        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="ConfirmDelete">Excluir</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">Confirmar Exclusão</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     private IEnumerable<Aluno> alunos;
-    private int alunoIdToDelete;
+    private MudDialog _deleteDialog;
+    private Aluno alunoToDelete;
     private bool deleteDialogVisible = false;
     private string searchString = "";
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,7 +115,9 @@
         {
             "Ativo" => Color.Success,
             "Inativo" => Color.Error,
-            "Trancado" => Color.Warning,
+            "Formado" => Color.Info,
+            "Desligado" => Color.Warning,
+            "Jubilado" => Color.Dark,
             _ => Color.Default
         };
     }
@@ -122,7 +129,7 @@
 
     private void VisualizarAluno(int id)
     {
-        Navigation.NavigateTo($"/alunos/visualizar/{id}");
+        Navigation.NavigateTo($"/alunos/detalhes/{id}");
     }
 
     private void EditarAluno(int id)
@@ -130,21 +137,27 @@
         Navigation.NavigateTo($"/alunos/editar/{id}");
     }
 
-    private void ExcluirAluno(int id)
+    private void ExcluirAluno(Aluno aluno)
     {
-        alunoIdToDelete = id;
-        deleteDialogVisible = true;
+        alunoToDelete = aluno;
+        _deleteDialog.ShowAsync();
     }
 
+    private void CloseDeleteDialog() => _deleteDialog.CloseAsync();
+    
     private async Task ConfirmDelete()
     {
-        // await AlunoService.DeleteAlunoAsync(alunoIdToDelete);
-        deleteDialogVisible = false;
-        await CarregarAlunos();
-    }
-
-    private void CloseDeleteDialog()
-    {
-        deleteDialogVisible = false;
+        try
+        {
+            await AlunoService.ExcluirAsync(alunoToDelete.AlunoId);
+            Snackbar.Add("Aluno excluído com sucesso!", Severity.Success);
+            await CarregarAlunos();
+            CloseDeleteDialog();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir aluno: {ex.Message}", Severity.Error);
+            CloseDeleteDialog();
+        }
     }
 }

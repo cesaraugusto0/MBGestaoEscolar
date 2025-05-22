@@ -1,0 +1,206 @@
+@page "/alunos/detalhes/{AlunoId:int}"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-16">
+    <MudPaper Class="pa-8" Elevation="5">
+        <div class="d-flex justify-space-between align-center mb-6">
+            <MudText Typo="Typo.h4">Detalhes do Aluno</MudText>
+            <MudButton Variant="Variant.Text" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       Href="@($"/alunos/editar/{_aluno.AlunoId}")">
+                Editar
+            </MudButton>
+        </div>
+
+        <MudCard>
+            <MudCardContent>
+                <!-- Seção de Informações Básicas -->
+                <MudText Typo="Typo.h6" Class="mb-4" Color="Color.Primary">Informações Básicas</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Matrícula:</MudText>
+                        <MudText>@_aluno.Matricula</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Status:</MudText>
+                        <MudChip T="string" Color="@GetStatusColor(_aluno.StatusAluno)" Variant="Variant.Filled">
+                            @_aluno.StatusAluno
+                        </MudChip>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Nome Completo:</MudText>
+                        <MudText>@_aluno.Nome</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">CPF:</MudText>
+                        <MudText>@FormatarCPF(_aluno.CPF)</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Data de Nascimento:</MudText>
+                        <MudText>@_aluno.DataNascimento?.ToString("dd/MM/yyyy")</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Idade:</MudText>
+                        <MudText>@CalcularIdade(_aluno.DataNascimento)</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Seção de Contato -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-4" Color="Color.Primary">Contato</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Email:</MudText>
+                        <MudText>@_aluno.Email</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Telefone:</MudText>
+                        <MudText>@FormatarTelefone(_aluno.Telefone)</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Seção de Datas -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-4" Color="Color.Primary">Datas</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Data de Cadastro:</MudText>
+                        <MudText>@_aluno.DataCadastro.ToString("dd/MM/yyyy HH:mm")</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Seção de Endereço -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-4" Color="Color.Primary">Endereço</MudText>
+                <MudText>@_aluno.Endereco</MudText>
+            </MudCardContent>
+
+            <MudCardActions Class="d-flex justify-end">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           Class="mr-2"
+                           Href="/alunos">
+                    Voltar para Lista
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="() => OpenDeleteDialog()">
+                    Excluir
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPaper>
+</MudContainer>
+
+<!-- Dialog de Confirmação para Exclusão -->
+<MudDialog @ref="_deleteDialog" Title="Confirmar Exclusão">
+    <DialogContent>
+        <MudText>Deseja realmente excluir o aluno @_aluno.Nome?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">Confirmar Exclusão</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private Aluno _aluno = new Aluno();
+    private MudDialog _deleteDialog;
+    
+    [Parameter] public int AlunoId { get; set; }
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public IAlunoService _alunoService { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarAluno();
+    }
+
+    private async Task CarregarAluno()
+    {
+        try
+        {
+            _aluno = await _alunoService.ObterAlunoAsync(AlunoId);
+
+            if (_aluno == null)
+            {
+                Snackbar.Add("Aluno não encontrado!", Severity.Error);
+                NavigationManager.NavigateTo("/alunos");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar aluno: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/alunos");
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Ativo" => Color.Success,
+            "Inativo" => Color.Error,
+            "Formado" => Color.Info,
+            "Desligado" => Color.Warning,
+            "Jubilado" => Color.Dark,
+            _ => Color.Default
+        };
+    }
+    
+    private string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+            
+        return $"{cpf.Substring(0, 3)}.{cpf.Substring(3, 3)}.{cpf.Substring(6, 3)}-{cpf.Substring(9, 2)}";
+    }
+    
+    private string FormatarTelefone(string telefone)
+    {
+        if (string.IsNullOrEmpty(telefone))
+            return "Não informado";
+            
+        if (telefone.Length == 11)
+            return $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 5)}-{telefone.Substring(7, 4)}";
+            
+        return telefone;
+    }
+    
+    private string CalcularIdade(DateTime? dataNascimento)
+    {
+        if (!dataNascimento.HasValue)
+            return "Não informada";
+            
+        var hoje = DateTime.Today;
+        var idade = hoje.Year - dataNascimento.Value.Year;
+        
+        if (dataNascimento.Value.Date > hoje.AddYears(-idade))
+            idade--;
+            
+        return $"{idade} anos";
+    }
+    
+    private void OpenDeleteDialog() => _deleteDialog.ShowAsync();
+    private void CloseDeleteDialog() => _deleteDialog.CloseAsync();
+    
+    private async Task ConfirmDelete()
+    {
+        try
+        {
+            await _alunoService.ExcluirAsync(_aluno.AlunoId);
+            Snackbar.Add("Aluno excluído com sucesso!", Severity.Success);
+            NavigationManager.NavigateTo("/alunos");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir aluno: {ex.Message}", Severity.Error);
+            await _deleteDialog.CloseAsync();
+        }
+    }
+}
