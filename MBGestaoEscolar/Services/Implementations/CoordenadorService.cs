@@ -13,9 +13,9 @@ namespace MBGestaoEscolar.Services.Implementations
             _coordenadorRepository = coordenadorRepository;
         }
         
-        public Task AdicionarAsync(Coordenador coordenador)
+        public async Task AdicionarAsync(Coordenador coordenador)
         {
-            throw new NotImplementedException();
+            await _coordenadorRepository.AdicionarAsync(coordenador);
         }
 
         public Task AtualizarAsync(Coordenador coordenador)
