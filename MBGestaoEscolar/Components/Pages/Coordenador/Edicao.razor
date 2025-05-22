@@ -1,0 +1,109 @@
+@page "/coordenadores/editar/{CoordenadorId:int}"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-16">
+    <MudPaper Class="pa-8" Elevation="5">
+        <MudText Typo="Typo.h4" Class="mb-6">Edição de Coordenador</MudText>
+        
+        <MudForm @ref="_form" Model="@_coordenador" @onsubmit="HandleSubmit">
+            
+            <MudTextField @bind-Value="_coordenador.Nome" 
+                          Label="Nome Completo" 
+                          Required="true" 
+                          RequiredError="Nome é obrigatório"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_coordenador.CPF" 
+                          Label="CPF" 
+                          Required="true" 
+                          RequiredError="CPF é obrigatório"
+                          Variant="Variant.Outlined"
+                          Mask="@(new PatternMask("000.000.000-00"))"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_coordenador.Email" 
+                          Label="Email" 
+                          Required="true" 
+                          RequiredError="Email é obrigatório"
+                          InputType="InputType.Email"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_coordenador.Telefone" 
+                          Label="Telefone"
+                          Variant="Variant.Outlined"
+                          Mask="@(new PatternMask("(00) 00000-0000"))"
+                          Class="mb-4" />
+            
+            <div class="d-flex justify-end mt-6">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           Class="mr-2"
+                           Href="/coordenadores">
+                    Cancelar
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           ButtonType="ButtonType.Submit">
+                    Salvar Alterações
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private Coordenador _coordenador = new Coordenador();
+    
+    [Parameter] public int CoordenadorId { get; set; }
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public ICoordenadorService _coordenadorService { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCoordenador();
+    }
+    
+    private async Task CarregarCoordenador()
+    {
+        try
+        {
+            _coordenador = await _coordenadorService.ObterCoordenadorAsync(CoordenadorId);
+            
+            if (_coordenador == null)
+            {
+                Snackbar.Add("Coordenador não encontrado!", Severity.Error);
+                NavigationManager.NavigateTo("/coordenadores");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar coordenador: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/coordenadores");
+        }
+    }
+    
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (_form.IsValid)
+        {
+            try
+            {
+                await _coordenadorService.AtualizarAsync(_coordenador);
+                Snackbar.Add("Coordenador atualizado com sucesso!", Severity.Success);
+                NavigationManager.NavigateTo($"/coordenadores");
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Erro ao atualizar coordenador: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

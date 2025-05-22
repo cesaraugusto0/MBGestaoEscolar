@@ -1,0 +1,147 @@
+@page "/coordenadores/detalhes/{CoordenadorId:int}"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-16">
+    <MudPaper Class="pa-8" Elevation="5">
+        <div class="d-flex justify-space-between align-center mb-6">
+            <MudText Typo="Typo.h4">Detalhes do Coordenador</MudText>
+            <MudButton Variant="Variant.Text" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       Href="@($"/coordenadores/editar/{_coordenador.CoordenadorId}")">
+                Editar
+            </MudButton>
+        </div>
+
+        <MudCard>
+            <MudCardContent>
+                <!-- Seção de Informações Básicas -->
+                <MudText Typo="Typo.h6" Class="mb-4" Color="Color.Primary">Informações Básicas</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Nome Completo:</MudText>
+                        <MudText>@_coordenador.Nome</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">CPF:</MudText>
+                        <MudText>@FormatarCPF(_coordenador.CPF)</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Seção de Contato -->
+                <MudText Typo="Typo.h6" Class="mt-6 mb-4" Color="Color.Primary">Contato</MudText>
+                
+                <MudGrid>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Email:</MudText>
+                        <MudText>@_coordenador.Email</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" Class="mb-4">
+                        <MudText Typo="Typo.subtitle2">Telefone:</MudText>
+                        <MudText>@FormatarTelefone(_coordenador.Telefone)</MudText>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+
+            <MudCardActions Class="d-flex justify-end">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           Class="mr-2"
+                           Href="/coordenadores">
+                    Voltar para Lista
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="() => OpenDeleteDialog()">
+                    Excluir
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPaper>
+</MudContainer>
+
+<!-- Dialog de Confirmação para Exclusão -->
+<MudDialog @ref="_deleteDialog" Title="Confirmar Exclusão">
+    <DialogContent>
+        <MudText>Deseja realmente excluir o coordenador @_coordenador.Nome?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">Confirmar Exclusão</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private Coordenador _coordenador = new Coordenador();
+    private MudDialog _deleteDialog;
+    
+    [Parameter] public int CoordenadorId { get; set; }
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public ICoordenadorService _coordenadorService { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCoordenador();
+    }
+
+    private async Task CarregarCoordenador()
+    {
+        try
+        {
+            _coordenador = await _coordenadorService.ObterCoordenadorAsync(CoordenadorId);
+
+            if (_coordenador == null)
+            {
+                Snackbar.Add("Coordenador não encontrado!", Severity.Error);
+                NavigationManager.NavigateTo("/coordenadores");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao carregar coordenador: {ex.Message}", Severity.Error);
+            NavigationManager.NavigateTo("/coordenadores");
+        }
+    }
+    
+    private string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+            
+        return $"{cpf.Substring(0, 3)}.{cpf.Substring(3, 3)}.{cpf.Substring(6, 3)}-{cpf.Substring(9, 2)}";
+    }
+    
+    private string FormatarTelefone(string telefone)
+    {
+        if (string.IsNullOrEmpty(telefone))
+            return "Não informado";
+            
+        if (telefone.Length == 11)
+            return $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 5)}-{telefone.Substring(7, 4)}";
+            
+        return telefone;
+    }
+    
+    private void OpenDeleteDialog() => _deleteDialog.ShowAsync();
+    private void CloseDeleteDialog() => _deleteDialog.CloseAsync();
+    
+    private async Task ConfirmDelete()
+    {
+        try
+        {
+            await _coordenadorService.ExcluirAsync(_coordenador.CoordenadorId);
+            Snackbar.Add("Coordenador excluído com sucesso!", Severity.Success);
+            NavigationManager.NavigateTo("/coordenadores");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir coordenador: {ex.Message}", Severity.Error);
+            await _deleteDialog.CloseAsync();
+        }
+    }
+}

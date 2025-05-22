@@ -18,9 +18,9 @@ namespace MBGestaoEscolar.Services.Implementations
             await _coordenadorRepository.AdicionarAsync(coordenador);
         }
 
-        public Task AtualizarAsync(Coordenador coordenador)
+        public async Task AtualizarAsync(Coordenador coordenador)
         {
-            throw new NotImplementedException();
+            await _coordenadorRepository.AtualizarAsync(coordenador);
         }
 
         public Task ExcluirAsync(int id)
@@ -33,9 +33,14 @@ namespace MBGestaoEscolar.Services.Implementations
             return await _coordenadorRepository.ListaCoordenadoresAsync();
         }
 
-        public Task<Coordenador> ObterCoordenadorAsync(int id)
+        public async Task<Coordenador> ObterCoordenadorAsync(int id)
         {
-            throw new NotImplementedException();
+            var coordenador = await _coordenadorRepository.ObterCoordenadorAsync(id);
+            if (coordenador == null)
+            {
+                throw new KeyNotFoundException($"O coordenador com id {id} não foi localizado");
+            }
+            return coordenador;
         }
     }
 }
