@@ -27,6 +27,9 @@ builder.Services.AddDbContext<SQLServerDBContext>(options =>
 builder.Services.AddScoped<IAlunoRepository, AlunoRepository>();
 builder.Services.AddScoped<IAlunoService, AlunoService>();
 
+builder.Services.AddScoped<ICoordenadorRepository, CoordenadorRepository>();
+builder.Services.AddScoped<ICoordenadorService, CoordenadorService>();
+
 
 // Add MudBlazor services
 builder.Services.AddMudServices();

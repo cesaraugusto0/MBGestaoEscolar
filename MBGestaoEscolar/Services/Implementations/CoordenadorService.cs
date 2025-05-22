@@ -1,10 +1,18 @@
 ﻿using MBGestaoEscolar.Entities;
+using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
 namespace MBGestaoEscolar.Services.Implementations
 {
     public class CoordenadorService : ICoordenadorService
     {
+        private readonly ICoordenadorRepository _coordenadorRepository;
+
+        public CoordenadorService(ICoordenadorRepository coordenadorRepository)
+        {
+            _coordenadorRepository = coordenadorRepository;
+        }
+        
         public Task AdicionarAsync(Coordenador coordenador)
         {
             throw new NotImplementedException();
@@ -20,9 +28,9 @@ namespace MBGestaoEscolar.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Coordenador>> ListaCoordenadorsAsync()
+        public async Task<IEnumerable<Coordenador>> ListaCoordenadorsAsync()
         {
-            throw new NotImplementedException();
+            return await _coordenadorRepository.ListaCoordenadoresAsync();
         }
 
         public Task<Coordenador> ObterCoordenadorAsync(int id)

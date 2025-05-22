@@ -4,7 +4,7 @@ namespace MBGestaoEscolar.Repository.Interfaces
 {
     public interface ICoordenadorRepository
     {
-        Task<IEnumerable<Coordenador>> ListaCoordenadorsAsync();
+        Task<IEnumerable<Coordenador>> ListaCoordenadoresAsync();
         Task<Coordenador> ObterCoordenadorAsync(int id);
         Task AdicionarAsync(Coordenador coordenador);
         Task AtualizarAsync(Coordenador coordenador);

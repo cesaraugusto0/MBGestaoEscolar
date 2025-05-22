@@ -1,0 +1,143 @@
+﻿@page "/coordenadores"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+@inject NavigationManager Navigation
+@inject ICoordenadorService CoordenadorService
+
+<MudContainer>
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Listagem de Coordenadores</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                      StartIcon="@Icons.Material.Filled.Add" 
+                      OnClick="CadastrarCoordenador">
+                Cadastrar Coordenador
+            </MudButton>
+        </MudCardHeader>
+        
+        <MudCardContent>
+            @if (coordenadores == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@coordenadores" Hover="true" Breakpoint="Breakpoint.None">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="searchString" 
+                                     Placeholder="Pesquisar..." 
+                                     Adornment="Adornment.Start" 
+                                     AdornmentIcon="@Icons.Material.Filled.Search" 
+                                     IconSize="Size.Medium" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Nome</MudTh>
+                        <MudTh>CPF</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Telefone</MudTh>
+                        <MudTh>Ações</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                        <MudTd DataLabel="Data Cadastro">@context.CPF</MudTd>
+                        <MudTd DataLabel="Email">@context.Email</MudTd>
+                        <MudTd DataLabel="Email">@context.Telefone</MudTd>
+                        <MudTd DataLabel="Ações">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                          Color="Color.Info" 
+                                          OnClick="@(() => VisualizarCoordenador(context.CoordenadorId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                          Color="Color.Warning" 
+                                          OnClick="@(() => EditarCoordenador(context.CoordenadorId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                          Color="Color.Error" 
+                                          OnClick="@(() => ExcluirCoordenador(context))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<!-- Dialog de Confirmação para Exclusão -->
+<MudDialog @ref="_deleteDialog" Title="Confirmar Exclusão">
+    <DialogContent>
+        <MudText>Deseja realmente excluir o coordenador @coordenadorToDelete.Nome?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">Confirmar Exclusão</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private IEnumerable<Coordenador> coordenadores;
+    private MudDialog _deleteDialog;
+    private Coordenador coordenadorToDelete;
+    private bool deleteDialogVisible = false;
+    private string searchString = "";
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCoordenadores();
+    }
+
+    private async Task CarregarCoordenadores()
+    {
+        try
+        {
+            coordenadores = await CoordenadorService.ListaCoordenadorsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar coordenadores: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CadastrarCoordenador()
+    {
+        Navigation.NavigateTo("/coordenadores/cadastro");
+    }
+
+    private void VisualizarCoordenador(int id)
+    {
+        Navigation.NavigateTo($"/coordenadores/detalhes/{id}");
+    }
+
+    private void EditarCoordenador(int id)
+    {
+        Navigation.NavigateTo($"/coordenadores/editar/{id}");
+    }
+
+    private void ExcluirCoordenador(Coordenador coordenador)
+    {
+        coordenadorToDelete = coordenador;
+        _deleteDialog.ShowAsync();
+    }
+
+    private void CloseDeleteDialog() => _deleteDialog.CloseAsync();
+    
+    private async Task ConfirmDelete()
+    {
+        try
+        {
+            await CoordenadorService.ExcluirAsync(coordenadorToDelete.CoordenadorId);
+            Snackbar.Add("Coordenador excluído com sucesso!", Severity.Success);
+            await CarregarCoordenadores();
+            CloseDeleteDialog();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir coordenador: {ex.Message}", Severity.Error);
+            CloseDeleteDialog();
+        }
+    }
+}
