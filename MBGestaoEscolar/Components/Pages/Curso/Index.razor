@@ -1,0 +1,162 @@
+﻿@page "/cursos"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+@inject NavigationManager Navigation
+@inject ICursoService CursoService
+
+<MudContainer>
+    <MudCard>
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Listagem de Cursos</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                      StartIcon="@Icons.Material.Filled.Add" 
+                      OnClick="CadastrarCurso">
+                Cadastrar Curso
+            </MudButton>
+        </MudCardHeader>
+        
+        <MudCardContent>
+            @if (cursos == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+            }
+            else
+            {
+                <MudTable Items="@cursos" Hover="true" Breakpoint="Breakpoint.None">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="searchString" 
+                                     Placeholder="Pesquisar..." 
+                                     Adornment="Adornment.Start" 
+                                     AdornmentIcon="@Icons.Material.Filled.Search" 
+                                     IconSize="Size.Medium" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Código</MudTh>
+                        <MudTh>Nome</MudTh>
+                        <MudTh>Carga Horária</MudTh>
+                        <MudTh>Modalidade</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Ações</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Código">@context.Codigo</MudTd>
+                        <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                        <MudTd DataLabel="Carga Horária">@context.CargaHoraria</MudTd>
+                        <MudTd DataLabel="Modalidade">@context.Modalidade</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip Color="@GetStatusColor(context.StatusCurso)" 
+                                    Variant="Variant.Filled" 
+                                    Size="Size.Small" 
+                                    T="string">@context.StatusCurso</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Ações">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                          Color="Color.Info" 
+                                          OnClick="@(() => VisualizarCurso(context.CursoId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                          Color="Color.Warning" 
+                                          OnClick="@(() => EditarCurso(context.CursoId))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                          Color="Color.Error" 
+                                          OnClick="@(() => ExcluirCurso(context))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<!-- Dialog de Confirmação para Exclusão -->
+<MudDialog @ref="_deleteDialog" Title="Confirmar Exclusão">
+    <DialogContent>
+        <MudText>Deseja realmente excluir o curso @cursoToDelete.Nome?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="CloseDeleteDialog">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmDelete">Confirmar Exclusão</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private IEnumerable<Curso> cursos;
+    private MudDialog _deleteDialog;
+    private Curso cursoToDelete;
+    private bool deleteDialogVisible = false;
+    private string searchString = "";
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public NavigationManager NavigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCursos();
+    }
+
+    private async Task CarregarCursos()
+    {
+        try
+        {
+            cursos = await CursoService.ListaCursosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar cursos: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Ativo" => Color.Success,
+            "Inativo" => Color.Error,
+            "Planejado" => Color.Info,
+            "Encerrado" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    private void CadastrarCurso()
+    {
+        Navigation.NavigateTo("/cursos/cadastro");
+    }
+
+    private void VisualizarCurso(int id)
+    {
+        Navigation.NavigateTo($"/cursos/detalhes/{id}");
+    }
+
+    private void EditarCurso(int id)
+    {
+        Navigation.NavigateTo($"/cursos/editar/{id}");
+    }
+
+    private void ExcluirCurso(Curso curso)
+    {
+        cursoToDelete = curso;
+        _deleteDialog.ShowAsync();
+    }
+
+    private void CloseDeleteDialog() => _deleteDialog.CloseAsync();
+    
+    private async Task ConfirmDelete()
+    {
+        try
+        {
+            await CursoService.ExcluirAsync(cursoToDelete.CursoId);
+            Snackbar.Add("Curso excluído com sucesso!", Severity.Success);
+            await CarregarCursos();
+            CloseDeleteDialog();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Erro ao excluir curso: {ex.Message}", Severity.Error);
+            CloseDeleteDialog();
+        }
+    }
+}

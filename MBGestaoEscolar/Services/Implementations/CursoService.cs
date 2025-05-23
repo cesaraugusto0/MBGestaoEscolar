@@ -1,10 +1,18 @@
 ﻿using MBGestaoEscolar.Entities;
+using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
 namespace MBGestaoEscolar.Services.Implementations
 {
     public class CursoService : ICursoService
     {
+        private readonly ICursoRepository _cursoRepository;
+
+        public CursoService(ICursoRepository cursoRepository)
+        {
+            _cursoRepository = cursoRepository;
+        }
+        
         public Task AdicionarAsync(Curso curso)
         {
             throw new NotImplementedException();
@@ -20,9 +28,9 @@ namespace MBGestaoEscolar.Services.Implementations
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Curso>> ListaCursosAsync()
+        public async Task<IEnumerable<Curso>> ListaCursosAsync()
         {
-            throw new NotImplementedException();
+            return await _cursoRepository.ListaCursosAsync();
         }
 
         public Task<Curso> ObterCursoAsync(int id)

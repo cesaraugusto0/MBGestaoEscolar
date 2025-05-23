@@ -30,6 +30,9 @@ builder.Services.AddScoped<IAlunoService, AlunoService>();
 builder.Services.AddScoped<ICoordenadorRepository, CoordenadorRepository>();
 builder.Services.AddScoped<ICoordenadorService, CoordenadorService>();
 
+builder.Services.AddScoped<ICursoRepository, CursoRepository>();
+builder.Services.AddScoped<ICursoService, CursoService>();
+
 
 // Add MudBlazor services
 builder.Services.AddMudServices();
