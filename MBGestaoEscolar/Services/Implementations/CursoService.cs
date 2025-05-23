@@ -1,4 +1,5 @@
-﻿using MBGestaoEscolar.Entities;
+﻿using System.Text;
+using MBGestaoEscolar.Entities;
 using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
@@ -13,9 +14,15 @@ namespace MBGestaoEscolar.Services.Implementations
             _cursoRepository = cursoRepository;
         }
         
-        public Task AdicionarAsync(Curso curso)
+        public async Task AdicionarAsync(Curso curso)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(curso.Nome))
+            {
+                throw new ArgumentNullException("O nome é obrigatório!");
+            }
+
+            curso.Codigo = GerarCodigo();
+            await _cursoRepository.AdicionarAsync(curso);
         }
 
         public Task AtualizarAsync(Curso curso)
@@ -36,6 +43,20 @@ namespace MBGestaoEscolar.Services.Implementations
         public Task<Curso> ObterCursoAsync(int id)
         {
             throw new NotImplementedException();
+        }
+        
+        public static string GerarCodigo()
+        {
+            const string caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            var codigo = new StringBuilder();
+        
+            for (int i = 0; i < 6; i++)
+            {
+                codigo.Append(caracteres[random.Next(caracteres.Length)]);
+            }
+        
+            return codigo.ToString();
         }
     }
 }

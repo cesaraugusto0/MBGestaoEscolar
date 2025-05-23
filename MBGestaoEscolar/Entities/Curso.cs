@@ -15,7 +15,7 @@ namespace MBGestaoEscolar.Entities
         public string? Trilha { get; set; }
         public int? PontosCAP { get; set; }
         public string StatusCurso { get; set; }
-        // public Coordenador? Coordenador { get; set; }
+        public Coordenador? Coordenador { get; set; }
         // public ICollection<Turma> turmas { get; set; }
     }
 }

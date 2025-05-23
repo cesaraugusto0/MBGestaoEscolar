@@ -1,0 +1,132 @@
+@page "/cursos/cadastro"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Implementations
+@using MBGestaoEscolar.Services.Interfaces
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="py-16">
+    <MudPaper Class="pa-8" Elevation="5">
+        <MudText Typo="Typo.h4" Class="mb-6">Cadastro de Curso</MudText>
+        
+        <MudForm @ref="_form" Model="@_curso" @onsubmit="HandleSubmit">
+            <MudTextField @bind-Value="_curso.Nome" 
+                          Label="Nome" 
+                          Required="true" 
+                          RequiredError="Nome é obrigatório"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_curso.Descricao" 
+                          Label="Descrição"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_curso.CargaHoraria" 
+                          Label="Carga Horária"
+                          Required="true"
+                          RequiredError="Carga horária é obrigatória"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudSelect @bind-Value="_curso.Modalidade"
+                       Label="Modalidade do Curso"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Modalidade do curso é obrigatória"
+                       Class="mb-4">
+                @foreach (var modalidade in modalidades)
+                {
+                    <MudSelectItem Value="modalidade">@modalidade</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <MudTextField @bind-Value="_curso.Trilha" 
+                          Label="Trilha"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudTextField @bind-Value="_curso.PontosCAP" 
+                          Label="Pontos CAP"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+            
+            <MudSelect @bind-Value="_curso.StatusCurso"
+                       Label="Status do Curso"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Status do curso é obrigatória"
+                       Class="mb-4">
+                @foreach (var status in statusCursos)
+                {
+                    <MudSelectItem Value="status">@status</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <MudSelect @bind-Value="_curso.Coordenador"
+                       Label="Coordenador do Curso"
+                       Variant="Variant.Outlined"
+                       Class="mb-4">
+                @foreach (var coordenador in coordenadores)
+                {
+                    <MudSelectItem Value="coordenador">@coordenador.Nome</MudSelectItem>
+                }
+            </MudSelect>
+            
+            <div class="d-flex justify-end mt-6">
+                <MudButton Variant="Variant.Text" 
+                           Color="Color.Default" 
+                           Class="mr-2"
+                           Href="/cursos">
+                    Cancelar
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           ButtonType="ButtonType.Submit">
+                    Cadastrar
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form;
+    private Curso _curso = new Curso();
+    private readonly string[] modalidades = {"Presencial","EAD","Híbrido"};
+    private readonly string[] statusCursos = {"Encerrado","Inativo","Ativo","Planejado"};
+    private IEnumerable<Coordenador?> coordenadores = [];
+    
+    [Inject] public ICoordenadorService CoordenadorService { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await CarregarCoordenadores();
+    }
+
+    private async Task CarregarCoordenadores()
+    {
+        try
+        {
+            coordenadores = await CoordenadorService.ListaCoordenadorsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar coordenadores: {ex.Message}", Severity.Error);
+        }
+    }
+    
+    private async Task HandleSubmit()
+    {
+        await _form.Validate();
+        
+        if (_form.IsValid)
+        {
+            await _cursoService.AdicionarAsync(_curso);
+            Snackbar.Add("Curso cadastrado com sucesso!", Severity.Success);
+            _curso = new Curso();
+            await _form.ResetAsync();
+        }
+    }
+    
+    [Inject] public ISnackbar Snackbar { get; set; }
+    [Inject] public ICursoService _cursoService { get; set; }
+}

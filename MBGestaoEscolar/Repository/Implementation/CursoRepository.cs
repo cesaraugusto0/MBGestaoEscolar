@@ -24,9 +24,10 @@ namespace MBGestaoEscolar.Repository.Implementation
             throw new NotImplementedException();
         }
 
-        public Task AdicionarAsync(Curso curso)
+        public async Task AdicionarAsync(Curso curso)
         {
-            throw new NotImplementedException();
+            await _context.Cursos.AddAsync(curso);
+            await _context.SaveChangesAsync();
         }
 
         public Task AtualizarAsync(Curso curso)
