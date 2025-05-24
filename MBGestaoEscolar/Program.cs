@@ -1,6 +1,8 @@
 using MBGestaoEscolar.Components;
 using MBGestaoEscolar.Data.Context;
+using MBGestaoEscolar.Repository.Implementation;
 using MBGestaoEscolar.Repository.Interfaces;
+using MBGestaoEscolar.Services.Implementations;
 using MBGestaoEscolar.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -22,9 +24,9 @@ builder.Services.AddDbContext<SQLServerDBContext>(options =>
 });
 
 // Registrar servicos de uso
-builder.Services.AddScoped<IAlunoService, IAlunoService>();
+builder.Services.AddScoped<IAlunoService, AlunoService>();
 
-builder.Services.AddScoped<IAlunoRepository, IAlunoRepository>();
+builder.Services.AddScoped<IAlunoRepository, AlunoRepository>();
 
 // Add MudBlazor services
 builder.Services.AddMudServices();

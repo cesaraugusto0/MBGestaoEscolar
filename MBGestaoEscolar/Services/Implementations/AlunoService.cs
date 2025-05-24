@@ -1,14 +1,14 @@
 ﻿using MBGestaoEscolar.Entities;
-using MBGestaoEscolar.Repository.Implementation;
+using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
 namespace MBGestaoEscolar.Services.Implementations
 {
     public class AlunoService : IAlunoService
     {
-        private readonly AlunoRepository _alunoRepository;
+        private readonly IAlunoRepository _alunoRepository;
 
-        public AlunoService(AlunoRepository alunoRepository)
+        public AlunoService(IAlunoRepository alunoRepository)
         {
             _alunoRepository = alunoRepository;
         }
@@ -24,7 +24,6 @@ namespace MBGestaoEscolar.Services.Implementations
 
         public async Task AtualizarAsync(Aluno aluno)
         {
-            // TODO verificar se usuario existe
             await _alunoRepository.AtualizarAsync(aluno);
         }
 
@@ -33,7 +32,7 @@ namespace MBGestaoEscolar.Services.Implementations
             await _alunoRepository.ExcluirAsync(id);
         }
 
-        public async Task<IEnumerable<Aluno>> ListaAlunosAsync()
+        public async Task<IEnumerable<Aluno>> ListarAlunosAsync()
         {
             return await _alunoRepository.ListaAlunosAsync();
         }
@@ -46,6 +45,6 @@ namespace MBGestaoEscolar.Services.Implementations
                 throw new KeyNotFoundException($"O aluno com id {id} não foi localizado");
             }
             return aluno;
-        }   
+        }
     }
 }

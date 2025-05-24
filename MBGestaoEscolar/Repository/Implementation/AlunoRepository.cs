@@ -27,7 +27,23 @@ namespace MBGestaoEscolar.Repository.Implementation
 
         public async Task AtualizarAsync(Aluno aluno)
         {
-            _context.Alunos.Update(aluno);
+            var alunoExistente = await _context.Alunos.FindAsync(aluno.AlunoId);
+            if (alunoExistente == null)
+            {
+                throw new KeyNotFoundException($"Aluno com ID {aluno.AlunoId} não encontrado.");
+            }
+
+            // Atualiza apenas as propriedades necessárias (preserva DataCadastro)
+            alunoExistente.Matricula = aluno.Matricula;
+            alunoExistente.Nome = aluno.Nome;
+            alunoExistente.CPF = aluno.CPF;
+            alunoExistente.Email = aluno.Email;
+            alunoExistente.Telefone = aluno.Telefone;
+            alunoExistente.DataNascimento = aluno.DataNascimento;
+            alunoExistente.Endereco = aluno.Endereco;
+            alunoExistente.StatusAluno = aluno.StatusAluno;
+            // DataCadastro não é modificada
+
             await _context.SaveChangesAsync();
         }
 

@@ -12,6 +12,7 @@ namespace MBGestaoEscolar.Data.Context
         public DbSet<Coordenador> Coordenadores { get; set; }
         public DbSet<Curso> Cursos { get; set; }
         public DbSet<Inscricao> Inscricoes { get; set; }
+        public DbSet<Instrutor> Instrutor { get; set; }
         public DbSet<Turma> Turmas { get; set; }
     }
 }
