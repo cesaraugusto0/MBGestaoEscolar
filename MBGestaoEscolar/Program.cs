@@ -28,6 +28,10 @@ builder.Services.AddScoped<IAlunoService, AlunoService>();
 
 builder.Services.AddScoped<IAlunoRepository, AlunoRepository>();
 
+builder.Services.AddScoped<IInstrutorService, InstrutorService>();
+
+builder.Services.AddScoped<IInstrutorRepository, InstrutorRepository>();
+
 // Add MudBlazor services
 builder.Services.AddMudServices();
 

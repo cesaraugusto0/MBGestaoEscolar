@@ -1,0 +1,123 @@
+﻿@page "/instrutores"
+@using MBGestaoEscolar.Entities
+@using MBGestaoEscolar.Services.Interfaces
+@using MudBlazor
+@inject IInstrutorService InstrutorService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudCard>
+	<MudCardContent>
+		<MudText Typo="Typo.h6" Class="mb-4"></MudText>
+		<MudPaper Class="d-flex justify-end flex-grow-1 mb-6" Elevation="0">
+			<MudButton Color="Color.Primary"
+					   Variant="Variant.Filled"
+					   StartIcon="@Icons.Material.Filled.Add"
+					   Disabled="@(_dialogOpen)"
+					   OnClick="() => ShowDialog(string.Empty)">
+				Adicionar o Novo Instrutor
+			</MudButton>
+		</MudPaper>
+		<MudDataGrid Items="@_instrutores"
+					 SortMode="SortMode.Multiple"
+					 Hover="true">
+			<Columns>
+				<PropertyColumn Property="x => x.InstrutorId" Title="ID"></PropertyColumn>
+				<PropertyColumn Property="x => x.Nome" Title="Nome"></PropertyColumn>
+				<PropertyColumn Property="x => x.CPF" Title="CPF"></PropertyColumn>
+				<PropertyColumn Property="x => x.Email" Title="Email"></PropertyColumn>
+				<PropertyColumn Property="x => x.Telefone" Title="Telefone"></PropertyColumn>
+				<PropertyColumn Property="x => x.FormacaoAcademica" Title="Formação acadêmica"></PropertyColumn>
+				<PropertyColumn Property="x => x.Especialidade" Title="Especialidade"></PropertyColumn>
+				<PropertyColumn Property="x => x.ValorHoraAula" Title="Valor hora aula"></PropertyColumn>
+				<PropertyColumn Property="x => x.StatusInstrutor" Title="Status"></PropertyColumn>
+				<TemplateColumn StickyRight="true" Title="Ações">
+					<CellTemplate>
+						<MudIconButton Color="Color.Primary"
+									   Icon="@Icons.Material.Filled.Edit"
+									   Size="Size.Small"
+									   OnClick="() => ShowDialog(context.Item.InstrutorId.ToString())"></MudIconButton>
+
+						<MudIconButton Color="Color.Secondary"
+									   Icon="@Icons.Material.Filled.Delete"
+									   Size="Size.Small"
+									   OnClick="() => ConfirmaExclusaoInstrutor(context.Item)"></MudIconButton>
+					</CellTemplate>
+				</TemplateColumn>
+			</Columns>
+			<PagerContent>
+				<MudDataGridPager T="Instrutor" />
+			</PagerContent>
+		</MudDataGrid>
+	</MudCardContent>
+</MudCard>
+
+@code {
+	private List<Instrutor> _instrutores = new();
+	private bool _dialogOpen;
+
+	private readonly DialogOptions _dialogOptions = new DialogOptions
+		{
+			CloseButton = true,
+			MaxWidth = MaxWidth.Medium,
+			FullWidth = true
+		};
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			_instrutores = (await InstrutorService.ListarInstrutoresAsync()).ToList();
+		}
+		catch (Exception e)
+		{
+			Snackbar.Add($"Erro ao carregar a lista de instrutor:  {e.Message}", Severity.Error);
+		}
+	}
+	private async Task ShowDialog(string idInstrutor)
+	{
+		_dialogOpen = true;
+		var parameters = new DialogParameters();
+
+		if (!string.IsNullOrEmpty(idInstrutor))
+		{
+			var instrutor = _instrutores.FirstOrDefault(x => x.InstrutorId.ToString() == idInstrutor);
+			parameters.Add("Instrutor", instrutor);
+			parameters.Add("Title", "Editar Instrutor");
+		}
+		else
+		{
+			parameters.Add("Instrutor", new Instrutor());
+			parameters.Add("Title", "Novo Instrutor");
+		}
+
+		var dialog = DialogService.Show<InstrutorDialog>(
+		parameters["Title"]!.ToString(),
+		parameters,
+		_dialogOptions);
+
+		var result = await dialog.Result;
+		_dialogOpen = false;
+		if (!result.Canceled)
+		{
+			_instrutores = (await InstrutorService.ListarInstrutoresAsync()).ToList();
+			StateHasChanged();
+		}
+	}
+
+	private async Task ConfirmaExclusaoInstrutor(Instrutor instrutor)
+	{
+		var confirmed = await DialogService.ShowMessageBox(
+		"Confirmação de Exclusão",
+		$"Deseja realmente excluir o instrutor {instrutor.Nome} (ID {instrutor.InstrutorId})?",
+		yesText: "Sim",
+		cancelText: "Não"
+		);
+		if (confirmed == true)
+		{
+			await InstrutorService.ExcluirAsync(instrutor.InstrutorId);
+			_instrutores = (await InstrutorService.ListarInstrutoresAsync()).ToList();
+			Snackbar.Add($"Instrutor '{instrutor.Nome}' removido com sucesso!", Severity.Success);
+			StateHasChanged();
+		}
+	}
+}

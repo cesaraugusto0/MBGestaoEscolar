@@ -4,7 +4,7 @@ namespace MBGestaoEscolar.Repository.Interfaces
 {
     public interface IInstrutorRepository
     {
-        Task<IEnumerable<Instrutor>> ListaInstrutorsAsync();
+        Task<IEnumerable<Instrutor>> ListaInstrutoresAsync();
         Task<Instrutor> ObterInstrutorAsync(int id);
         Task AdicionarAsync(Instrutor instrutor);
         Task AtualizarAsync(Instrutor instrutor);

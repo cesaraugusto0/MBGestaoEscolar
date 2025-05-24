@@ -1,33 +1,50 @@
 ﻿using MBGestaoEscolar.Entities;
+using MBGestaoEscolar.Repository.Interfaces;
 using MBGestaoEscolar.Services.Interfaces;
 
 namespace MBGestaoEscolar.Services.Implementations
 {
     public class InstrutorService : IInstrutorService
     {
-        public Task AdicionarAsync(Instrutor instrutor)
+        private readonly IInstrutorRepository _instrutorRepository;
+
+        public InstrutorService(IInstrutorRepository instrutorRepository)
         {
-            throw new NotImplementedException();
+            _instrutorRepository = instrutorRepository;
         }
 
-        public Task AtualizarAsync(Instrutor instrutor)
+        public async Task AdicionarAsync(Instrutor instrutor)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(instrutor.Nome))
+            {
+                throw new ArgumentNullException("O nome é obrigatório!");
+            }
+            await _instrutorRepository.AdicionarAsync(instrutor);
         }
 
-        public Task ExcluirAsync(int id)
+        public async Task AtualizarAsync(Instrutor instrutor)
         {
-            throw new NotImplementedException();
+            await _instrutorRepository.AtualizarAsync(instrutor);
         }
 
-        public Task<IEnumerable<Instrutor>> ListaInstrutorsAsync()
+        public async Task ExcluirAsync(int id)
         {
-            throw new NotImplementedException();
+            await _instrutorRepository.ExcluirAsync(id);
         }
 
-        public Task<Instrutor> ObterInstrutorAsync(int id)
+        public async Task<IEnumerable<Instrutor>> ListarInstrutoresAsync()
         {
-            throw new NotImplementedException();
+            return await _instrutorRepository.ListaInstrutoresAsync();
+        }
+
+        public async Task<Instrutor> ObterInstrutorAsync(int id)
+        {
+            var instrutor = await _instrutorRepository.ObterInstrutorAsync(id);
+            if (instrutor == null)
+            {
+                throw new KeyNotFoundException($"O instrutor com id {id} não foi localizado");
+            }
+            return instrutor;
         }
     }
 }
